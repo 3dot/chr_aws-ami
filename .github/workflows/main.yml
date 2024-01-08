@@ -1,0 +1,62 @@
+name: Create CHR EC2 AMI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'version.txt'
+
+jobs:
+  upload:
+    name: Download CHR and upload to S3
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_IAMROLE_UPLOAD }}
+          aws-region: eu-central-1
+      - run: echo "CHR_TARGET_VERSION=$(cat version.txt)" >> $GITHUB_ENV
+      - name: Cache CHR
+        id: cache-chr
+        uses: actions/cache@v3
+        with:
+          path: /tmp/chr
+          key: chr-${{ env.CHR_TARGET_VERSION }}.img
+      - name: download chr from mikrotik.com
+        if: steps.cache-chr.outputs.cache-hit != 'true'
+        run: wget -q -P /tmp/chr "https://download.mikrotik.com/routeros/${{ env.CHR_TARGET_VERSION }}/chr-${{ env.CHR_TARGET_VERSION }}.img.zip"
+      - name: unzip image
+        if: steps.cache-chr.outputs.cache-hit != 'true'
+        run: |
+          cd /tmp/chr
+          filename=$(basename -s .zip *.zip)
+          unzip *.zip
+          rm *.zip
+      - name: upload image to s3
+        run: aws s3 cp /tmp/chr/chr-${{ env.CHR_TARGET_VERSION }}.img s3://${{ vars.AWS_TARGET_BUCKET }} --quiet
+  create:
+    needs: upload
+    name: Import snapshot and create AMI
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_IAMROLE_IMPORT }}
+          aws-region: eu-central-1
+      - run: echo "CHR_TARGET_VERSION=$(cat version.txt)" >> $GITHUB_ENV
+      - run: |
+          task=$(sh ./create-ami.sh import-snapshot "${{ vars.AWS_TARGET_BUCKET }}");
+          echo "task: ${task}";
+          snapshot=$(sh ./create-ami.sh monitor-import "${task}");
+          echo "snapshot: ${snapshot}";
+          image=$(sh ./create-ami.sh register-image "${snapshot}");
+          echo "image: ${image}";
+          sh ./create-ami.sh publish-image "${image}";
