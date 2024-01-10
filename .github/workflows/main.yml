@@ -37,7 +37,7 @@ jobs:
           unzip *.zip
           rm *.zip
       - name: upload image to s3
-        run: aws s3 cp /tmp/chr/chr-${{ env.CHR_TARGET_VERSION }}.img s3://${{ vars.AWS_TARGET_BUCKET }} --quiet
+        run: aws s3 cp /tmp/chr/chr-${{ env.CHR_TARGET_VERSION }}.img s3://${{ vars.AWS_TARGET_BUCKET }}/${{ env.CHR_TARGET_VERSION }}/chr-${{ env.CHR_TARGET_VERSION }}.img --quiet
   create:
     needs: upload
     name: Import snapshot and create AMI

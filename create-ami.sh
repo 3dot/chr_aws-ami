@@ -2,7 +2,7 @@
 ###### https://help.mikrotik.com/docs/display/RKB/Create+an+RouterOS+CHR+7.6+AMI
 imageVersion=$(printenv CHR_TARGET_VERSION)
 imageDescription="Mikrotik RouterOS CHR v${imageVersion}"
-imageKey="chr-${imageVersion}.img"
+imageKey="${imageVersion}/chr-${imageVersion}.img"
 runNumber=$(printenv GITHUB_RUN_NUMBER)
 
 JOB="$1"
@@ -38,7 +38,7 @@ case $JOB in
 
         aws ec2 register-image \
           --name "$imageDescription" \
-          --description "Mikrotik CHR image created directly from the RAW image available on https://mikrotik.com/download. ghrun#${runNumber}" \
+          --description "Mikrotik CHR image created directly from the RAW image available on https://mikrotik.com/download. Source code: https://github.com/3dot/chr_aws-ami | #${runNumber}" \
           --architecture x86_64 \
           --virtualization-type hvm \
           --ena-support \
