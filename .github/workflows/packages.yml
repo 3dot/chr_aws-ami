@@ -1,0 +1,39 @@
+name: Unzip and upload CHR packages
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'version.txt'
+
+jobs:
+  upload:
+    name: Download CHR packages, unzip and upload to S3
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_IAMROLE_UPLOAD }}
+          aws-region: eu-central-1
+      - run: echo "CHR_TARGET_VERSION=$(cat version.txt)" >> $GITHUB_ENV
+      - name: Cache CHR
+        id: cache-chr
+        uses: actions/cache@v3
+        with:
+          path: /tmp/chr
+          key: all_packages-x86-${{ env.CHR_TARGET_VERSION }}.zip
+      - name: download chr packages from mikrotik.com
+        if: steps.cache-chr.outputs.cache-hit != 'true'
+        run: wget -q -P /tmp/chr "https://download.mikrotik.com/routeros/${{ env.CHR_TARGET_VERSION }}/all_packages-x86-${{ env.CHR_TARGET_VERSION }}.zip"
+      - name: unzip image
+        run: |
+          cd /tmp/chr
+          filename=$(basename -s .zip *.zip)
+          unzip *.zip
+          rm *.zip
+      - name: upload packages to s3
+        run: aws s3 cp --recursive /tmp/chr s3://${{ vars.AWS_TARGET_BUCKET }}/${{ env.CHR_TARGET_VERSION }}/packages --quiet
