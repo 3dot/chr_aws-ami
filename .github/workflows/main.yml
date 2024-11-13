@@ -1,6 +1,7 @@
 name: Create CHR EC2 AMI
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
     paths:
