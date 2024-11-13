@@ -25,10 +25,10 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/chr
-          key: chr-${{ env.CHR_TARGET_VERSION }}-arm64.img
+          key: chr-${{ env.CHR_TARGET_VERSION }}.img
       - name: download chr from mikrotik.com
         if: steps.cache-chr.outputs.cache-hit != 'true'
-        run: wget -q -P /tmp/chr "https://download.mikrotik.com/routeros/${{ env.CHR_TARGET_VERSION }}/chr-${{ env.CHR_TARGET_VERSION }}-arm64.img.zip"
+        run: wget -q -P /tmp/chr "https://download.mikrotik.com/routeros/${{ env.CHR_TARGET_VERSION }}/chr-${{ env.CHR_TARGET_VERSION }}.img.zip"
       - name: unzip image
         if: steps.cache-chr.outputs.cache-hit != 'true'
         run: |
@@ -37,7 +37,7 @@ jobs:
           unzip *.zip
           rm *.zip
       - name: upload image to s3
-        run: aws s3 cp /tmp/chr/chr-${{ env.CHR_TARGET_VERSION }}-arm64.img s3://${{ vars.AWS_TARGET_BUCKET }}/${{ env.CHR_TARGET_VERSION }}/chr-${{ env.CHR_TARGET_VERSION }}-arm64.img --quiet
+        run: aws s3 cp /tmp/chr/chr-${{ env.CHR_TARGET_VERSION }}.img s3://${{ vars.AWS_TARGET_BUCKET }}/${{ env.CHR_TARGET_VERSION }}/chr-${{ env.CHR_TARGET_VERSION }}.img --quiet
   create:
     needs: upload
     name: Import snapshot and create AMI
