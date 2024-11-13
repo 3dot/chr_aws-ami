@@ -29,7 +29,7 @@ jobs:
           key: all_packages-${{ env.CHR_TARGET_VERSION }}.zip
       - name: download chr packages from mikrotik.com
         if: steps.cache-chr.outputs.cache-hit != 'true'
-        run: wget -q -P /tmp/chr "https://download.mikrotik.com/routeros/${{ env.CHR_TARGET_VERSION }}/all_packages-${{ env.CHR_TARGET_VERSION }}.zip"
+        run: wget -q -P /tmp/chr "https://download.mikrotik.com/routeros/${{ env.CHR_TARGET_VERSION }}/all_packages-x86-${{ env.CHR_TARGET_VERSION }}.zip"
       - name: unzip image
         run: |
           cd /tmp/chr
