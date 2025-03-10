@@ -22,9 +22,9 @@ case $JOB in
         [ -z "$import_task_id" ] && echo "No import task ID provided, cannot continue" && break
 
         x=1
-        while [ ${x} -le 6 ]
+        while [ ${x} -le 10 ]
         do
-            sleep 20
+            sleep 60
             snapshot=$(aws ec2 describe-import-snapshot-tasks \
                 --import-task-ids $import_task_id | jq -r '.ImportSnapshotTasks[0].SnapshotTaskDetail.SnapshotId // ""')
             [ ! -z "$snapshot" ] && echo $snapshot && break
